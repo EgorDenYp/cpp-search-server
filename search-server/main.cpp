@@ -1,7 +1,3 @@
-// Решите загадку: Сколько чисел от 1 до 1000 содержат как минимум одну цифру 3?
-// Напишите ответ здесь:
-//271
-// Закомитьте изменения и отправьте их в свой репозиторий.
 #include <algorithm>
 #include <iostream>
 #include <set>
@@ -63,12 +59,9 @@ public:
 
     void AddDocument(int document_id, const string& document) {
         const vector<string> words = SplitIntoWordsNoStop(document);
+        double TF_incr = 1.0 / static_cast<double>(words.size());
         for (const string& word : words) {
-            if (!documents_rev_id_[word].count(document_id)) {
-                documents_rev_id_[word][document_id] = 1.0 / static_cast<double>(words.size()); //if this id wasn't created before, we initialize TF
-            } else {
-            documents_rev_id_[word] [document_id] += 1.0 / static_cast<double>(words.size());
-            }
+            documents_rev_id_[word] [document_id] += TF_incr;
         }
         ++document_count_;
     }
@@ -149,7 +142,6 @@ private:
             double word_IDF = ComputeIDF(plus_word); //get IDF of this query's word
             for (auto [doc_id, word_TF] : documents_rev_id_.at(plus_word)) {
                 matched_documents_relevance[doc_id] += word_TF*word_IDF;
-                //cout << "doc id: " << doc_id << " rel: " << matched_documents_relevance[doc_id] << endl;
             }
           }
         }
@@ -194,7 +186,6 @@ SearchServer CreateSearchServer() {
 
 int main() {
     const SearchServer search_server = CreateSearchServer();
-    //search_server.GetDocumentBase();
 
     const string query = ReadLine();
     for (const Document& doc : search_server.FindTopDocuments(query)) {
