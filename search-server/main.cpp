@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 #include <map>
+#include <numeric>
 #include <tuple>
 
 
@@ -80,11 +81,7 @@ public:
         //print document
     }
 
-    vector<Document> FindTopDocuments(const string& raw_query) const {
-        return FindTopDocuments(raw_query, [](int doc_id, DocumentStatus status, int rating) { return (status == DocumentStatus::ACTUAL); });
-    }
-
-    vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus document_status) const {
+    vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus document_status = DocumentStatus::ACTUAL) const {
         return FindTopDocuments (raw_query, [document_status](int doc_id, DocumentStatus status, int rating) { return document_status == status; });
     }
 
@@ -228,12 +225,8 @@ private:
     }   
 
    static int ComputeAverageRating (const vector<int>& ratings) {
-        int result = 0;
-        for (int rating : ratings) {
-            result += rating;
-        }
         if (!ratings.empty()) {
-            return result / static_cast<int>(ratings.size());
+            return accumulate(ratings.begin(), ratings.end(), 0) / static_cast<int>(ratings.size());
         } else {
             return 0;
         }
