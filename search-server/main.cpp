@@ -291,9 +291,8 @@ private:
    static int ComputeAverageRating (const vector<int>& ratings) {
         if (!ratings.empty()) {
             return accumulate(ratings.begin(), ratings.end(), 0) / static_cast<int>(ratings.size());
-        } else {
-            return 0;
         }
+        return 0;
     }
 
     static bool IsValidWord (const string& word) {
