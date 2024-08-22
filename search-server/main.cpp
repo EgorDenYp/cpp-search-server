@@ -168,8 +168,6 @@ public:
         return document_count_;
     }
 
-    inline static constexpr int INVALID_DOCUMENT_ID = -1;
-
     int GetDocumentId (int index) {
         if (index < 0 || index >= static_cast<int>(doc_add_order_.size())) {
             throw out_of_range("requested index is out of range");
