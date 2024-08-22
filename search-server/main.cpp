@@ -171,9 +171,8 @@ public:
     int GetDocumentId (int index) {
         if (index < 0 || index >= static_cast<int>(doc_add_order_.size())) {
             throw out_of_range("requested index is out of range");
-        } else {
-            return doc_add_order_[index];
-        }
+        } 
+        return doc_add_order_[index];
     }
 
     tuple<vector<string>, DocumentStatus> MatchDocument (const string& raw_query, int document_id) const {
