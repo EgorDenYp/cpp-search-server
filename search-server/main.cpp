@@ -78,13 +78,8 @@ public:
 
     SearchServer() = default;
 
-    explicit SearchServer(const string& stop_words_string) {
-        if (!IsValidWord(stop_words_string)) {
-            throw invalid_argument("special symbols in stop words were detected");
-        }
-        for (const string& word : SplitIntoWords(stop_words_string)) {
-            stop_words_.insert(word);
-        }
+    explicit SearchServer(const string& stop_words_string) 
+    : SearchServer(SplitIntoWords(stop_words_string)) {
     }
 
     template <typename Collection>
