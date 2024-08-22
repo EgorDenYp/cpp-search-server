@@ -121,8 +121,8 @@ public:
         for (const string& word : words) {
             documents_rev_id_[word] [document_id] += TF_incr;
         }
-        documents_properties_[document_id].rating = ComputeAverageRating(ratings);
-        documents_properties_[document_id].status = status;
+        DocumentProperties document_propeties_bundled = {ComputeAverageRating(ratings), status};
+        documents_properties_[document_id] = document_propeties_bundled;
         ++document_count_;
         //print document
     }
