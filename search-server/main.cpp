@@ -84,12 +84,13 @@ public:
 
     template <typename Collection>
     explicit SearchServer (const Collection& stop_words_collection) {
-        for (const string& word : stop_words_collection) {
-            if (!IsValidWord(word)) {
-                throw invalid_argument("special symbols in stop words were detected");
+        all_of(stop_words_collection.begin(), stop_words_collection.end(), [this](const string& word) -> bool {
+            if (IsValidWord(word)) {
+                stop_words_.insert(word);
+                return true;
             }
-            stop_words_.insert(word);
-        }
+            throw invalid_argument("special symbols in stop words were detected");
+        });
     }
 
     void SetStopWords(const string& text) {
