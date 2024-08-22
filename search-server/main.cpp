@@ -78,23 +78,19 @@ public:
 
     SearchServer() = default;
 
-    explicit SearchServer(const string& stop_words_string) {
-        if (!IsValidWord(stop_words_string)) {
-            throw invalid_argument("special symbols in stop words were detected");
-        }
-        for (const string& word : SplitIntoWords(stop_words_string)) {
-            stop_words_.insert(word);
-        }
+    explicit SearchServer(const string& stop_words_string) 
+    : SearchServer(SplitIntoWords(stop_words_string)) {
     }
 
     template <typename Collection>
     explicit SearchServer (const Collection& stop_words_collection) {
-        for (const string& word : stop_words_collection) {
-            if (!IsValidWord(word)) {
-                throw invalid_argument("special symbols in stop words were detected");
+        all_of(stop_words_collection.begin(), stop_words_collection.end(), [this](const string& word) -> bool {
+            if (IsValidWord(word)) {
+                stop_words_.insert(word);
+                return true;
             }
-            stop_words_.insert(word);
-        }
+            throw invalid_argument("special symbols in stop words were detected");
+        });
     }
 
     void SetStopWords(const string& text) {
@@ -125,9 +121,8 @@ public:
         for (const string& word : words) {
             documents_rev_id_[word] [document_id] += TF_incr;
         }
-        documents_properties_[document_id].rating = ComputeAverageRating(ratings);
-        documents_properties_[document_id].status = status;
-        ++document_count_;
+        DocumentProperties document_propeties_bundled = {ComputeAverageRating(ratings), status};
+        documents_properties_[document_id] = document_propeties_bundled;
         //print document
     }
 
@@ -159,7 +154,7 @@ public:
                 cout << "  doc_id:"s << doc_id << " TF: "s << TF << endl;
             }
         }
-        cout << "number of documents: "s<< document_count_ << endl;
+        cout << "number of documents: "s<< GetDocumentCount() << endl;
     }
 
     void PrintDocumentsProperties () const {
@@ -169,17 +164,14 @@ public:
     }
 
     int GetDocumentCount () const {
-        return document_count_;
+        return documents_properties_.size();
     }
-
-    inline static constexpr int INVALID_DOCUMENT_ID = -1;
 
     int GetDocumentId (int index) {
         if (index < 0 || index >= static_cast<int>(doc_add_order_.size())) {
             throw out_of_range("requested index is out of range");
-        } else {
-            return doc_add_order_[index];
-        }
+        } 
+        return doc_add_order_[index];
     }
 
     tuple<vector<string>, DocumentStatus> MatchDocument (const string& raw_query, int document_id) const {
@@ -222,8 +214,7 @@ private:
 
     vector<int> doc_add_order_ = {};
 
-
-    int document_count_ = 0; //total number of documents on server
+    //total number of documents on server
 
     bool IsStopWord(const string& word) const {
         return stop_words_.count(word) > 0;
@@ -268,7 +259,9 @@ private:
           if (documents_rev_id_.count(plus_word)) {
             double word_IDF = ComputeIDF(plus_word); //get IDF of this query's word
             for (auto [doc_id, word_TF] : documents_rev_id_.at(plus_word)) {
-                matched_documents_relevance[doc_id] += word_TF*word_IDF;
+                if (filter(doc_id, documents_properties_.at(doc_id).status, documents_properties_.at(doc_id).rating)) {
+                    matched_documents_relevance[doc_id] += word_TF * word_IDF;
+                }
             }
           }
         }
@@ -283,25 +276,21 @@ private:
 
         //conversion of result to vector with deletion of documents that don't match to status
         for (const auto& [id, relevance] : matched_documents_relevance) {
-            if (filter(id, documents_properties_.at(id).status, documents_properties_.at(id).rating)) {
-                result.push_back({id, relevance, documents_properties_.at(id).rating});
-            }
-            
+            result.push_back({id, relevance, documents_properties_.at(id).rating});
         }
 
         return result;
     }
 
     double ComputeIDF (const string& word) const { //we accept that word's presense in documents checks before function call
-        return log(static_cast<double>(document_count_)/static_cast<double>(documents_rev_id_.at(word).size()));
+        return log(static_cast<double>(GetDocumentCount())/static_cast<double>(documents_rev_id_.at(word).size()));
     }   
 
    static int ComputeAverageRating (const vector<int>& ratings) {
         if (!ratings.empty()) {
             return accumulate(ratings.begin(), ratings.end(), 0) / static_cast<int>(ratings.size());
-        } else {
-            return 0;
         }
+        return 0;
     }
 
     static bool IsValidWord (const string& word) {
