@@ -123,7 +123,6 @@ public:
         }
         DocumentProperties document_propeties_bundled = {ComputeAverageRating(ratings), status};
         documents_properties_[document_id] = document_propeties_bundled;
-        ++document_count_;
         //print document
     }
 
@@ -155,7 +154,7 @@ public:
                 cout << "  doc_id:"s << doc_id << " TF: "s << TF << endl;
             }
         }
-        cout << "number of documents: "s<< document_count_ << endl;
+        cout << "number of documents: "s<< GetDocumentCount() << endl;
     }
 
     void PrintDocumentsProperties () const {
@@ -165,7 +164,7 @@ public:
     }
 
     int GetDocumentCount () const {
-        return document_count_;
+        return documents_properties_.size();
     }
 
     int GetDocumentId (int index) {
@@ -215,8 +214,7 @@ private:
 
     vector<int> doc_add_order_ = {};
 
-
-    int document_count_ = 0; //total number of documents on server
+    //total number of documents on server
 
     bool IsStopWord(const string& word) const {
         return stop_words_.count(word) > 0;
@@ -285,7 +283,7 @@ private:
     }
 
     double ComputeIDF (const string& word) const { //we accept that word's presense in documents checks before function call
-        return log(static_cast<double>(document_count_)/static_cast<double>(documents_rev_id_.at(word).size()));
+        return log(static_cast<double>(GetDocumentCount())/static_cast<double>(documents_rev_id_.at(word).size()));
     }   
 
    static int ComputeAverageRating (const vector<int>& ratings) {
