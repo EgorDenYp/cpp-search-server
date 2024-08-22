@@ -261,7 +261,9 @@ private:
           if (documents_rev_id_.count(plus_word)) {
             double word_IDF = ComputeIDF(plus_word); //get IDF of this query's word
             for (auto [doc_id, word_TF] : documents_rev_id_.at(plus_word)) {
-                matched_documents_relevance[doc_id] += word_TF*word_IDF;
+                if (filter(doc_id, documents_properties_.at(doc_id).status, documents_properties_.at(doc_id).rating)) {
+                    matched_documents_relevance[doc_id] += word_TF * word_IDF;
+                }
             }
           }
         }
@@ -276,10 +278,7 @@ private:
 
         //conversion of result to vector with deletion of documents that don't match to status
         for (const auto& [id, relevance] : matched_documents_relevance) {
-            if (filter(id, documents_properties_.at(id).status, documents_properties_.at(id).rating)) {
-                result.push_back({id, relevance, documents_properties_.at(id).rating});
-            }
-            
+            result.push_back({id, relevance, documents_properties_.at(id).rating});
         }
 
         return result;
