@@ -109,9 +109,6 @@ public:
             throw invalid_argument("document with this id had been added before");
         }
 
-        if (!IsValidWord(document)) {
-            throw invalid_argument("document contains special symbols");
-        }
         //endchecks
 
         doc_add_order_.push_back(document_id);
@@ -146,32 +143,12 @@ public:
         return matched_documents;
     }
 
-
-    void GetDocumentBase () const {
-        for (auto& [word, docs] : documents_rev_id_) {
-            cout << "word:"s << word << endl;
-            for (auto [doc_id, TF] : docs) {
-                cout << "  doc_id:"s << doc_id << " TF: "s << TF << endl;
-            }
-        }
-        cout << "number of documents: "s<< GetDocumentCount() << endl;
-    }
-
-    void PrintDocumentsProperties () const {
-        for (const auto& document : documents_properties_) {
-            cout << "id: "s << document.first << " status: "s << static_cast<int>(document.second.status) << endl;  
-        }
-    }
-
     int GetDocumentCount () const {
         return documents_properties_.size();
     }
 
     int GetDocumentId (int index) {
-        if (index < 0 || index >= static_cast<int>(doc_add_order_.size())) {
-            throw out_of_range("requested index is out of range");
-        } 
-        return doc_add_order_[index];
+        return doc_add_order_.at(index);
     }
 
     tuple<vector<string>, DocumentStatus> MatchDocument (const string& raw_query, int document_id) const {
@@ -190,7 +167,7 @@ public:
                 }
             }
         }
-        return tuple(matched_words, documents_properties_.at(document_id).status);
+        return {matched_words, documents_properties_.at(document_id).status};
     }
 
 
@@ -221,6 +198,9 @@ private:
     }
 
     vector<string> SplitIntoWordsNoStop(const string& text) const {
+        if (!IsValidWord(text)) {
+            throw invalid_argument ("contains special symbols");
+        }
         vector<string> words;
         for (const string& word : SplitIntoWords(text)) {
             if (!IsStopWord(word[0]=='-' ? word.substr(1) : word)) {
@@ -231,9 +211,6 @@ private:
     }
 
     Query ParseQuery(const string& text) const {
-        if (!IsValidWord(text)) {
-            throw invalid_argument("query contains special symbols");
-        }
         Query query_words;
         for (const string& word : SplitIntoWordsNoStop(text)) {
             if (word[0] == '-') {
